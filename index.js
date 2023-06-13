@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.i5yptyi.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -27,22 +27,34 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     
+  const usersCollection = client.db('summerDB').collection('users');
   const classCollection = client.db('summerDB').collection('class');
   const reviewCollection = client.db('summerDB').collection('review');
   const bookCollection = client.db('summerDB').collection('book');
 
+// users related apis
+
+  app.post('/users', async(req, res) =>{
+    const user = req.body;
+    const result = await usersCollection.insertOne(user);
+    res.send(result);
+  })
+
+  //class related API
   app.get('/classes', async(req, res) =>{
       const result = await classCollection.find().toArray();
-      console.log(result);
       res.send(result);
   })
 
+  // review related API
   app.get('/review', async(req, res) =>{
     const result = await reviewCollection.find().toArray();
     console.log(result)
     res.send(result);
   })
 
+
+  // book related API
   app.get('/books', async(req, res) => {
    const email = req.query.email;
    console.log(email);
@@ -60,6 +72,14 @@ async function run() {
     const result = await bookCollection.insertOne(item);
     res.send(result);
 
+  })
+
+  app.delete('/books/:id', async(req, res) =>{
+      const id = req.params.id;
+      console.log(id)
+      const query = {_id: new ObjectId(id)}
+      const result = await bookCollection.deleteOne(query);
+      res.send(result);
   })
 
 
